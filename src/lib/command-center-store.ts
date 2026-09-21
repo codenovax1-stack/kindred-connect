@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { UIMessage } from "ai";
 import { DEFAULT_ROBOTS, type Robot, type RobotStatus } from "./robots";
 
