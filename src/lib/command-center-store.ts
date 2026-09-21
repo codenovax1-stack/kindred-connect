@@ -41,25 +41,31 @@ function write(key: string, value: unknown) {
 }
 
 function useStoredValue<T>(key: string, fallback: T) {
+  const fallbackRef = useRef(fallback);
   const [value, setValue] = useState<T>(fallback);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setValue(read<T>(key, fallback));
+    // Only replace state when the serialized content actually changed, so
+    // listeners cannot cause endless re-renders with fresh object identities.
+    const sync = () =>
+      setValue((prev) => {
+        const next = read<T>(key, fallbackRef.current);
+        return JSON.stringify(prev) === JSON.stringify(next) ? prev : next;
+      });
+    sync();
     setHydrated(true);
-    const onChange = () => setValue(read<T>(key, fallback));
-    window.addEventListener("rcc:changed", onChange);
-    window.addEventListener("storage", onChange);
+    window.addEventListener("rcc:changed", sync);
+    window.addEventListener("storage", sync);
     return () => {
-      window.removeEventListener("rcc:changed", onChange);
-      window.removeEventListener("storage", onChange);
+      window.removeEventListener("rcc:changed", sync);
+      window.removeEventListener("storage", sync);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
   const update = useCallback(
     (next: T) => {
-      setValue(next);
+      setValue((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
       write(key, next);
     },
     [key],
