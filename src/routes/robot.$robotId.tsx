@@ -61,18 +61,35 @@ export const Route = createFileRoute("/robot/$robotId")({
 
 function RobotChannel() {
   const { robotId } = useParams({ from: "/robot/$robotId" });
+  // Stored history is read from localStorage (client-only) before the chat
+  // mounts, so useChat starts with the right messages instead of being
+  // re-seeded after the fact.
+  const [loaded, setLoaded] = useState<{ id: string; messages: UIMessage[] } | null>(null);
+
+  useEffect(() => {
+    setLoaded({ id: robotId, messages: loadMessages(robotId) });
+  }, [robotId]);
+
+  if (!loaded || loaded.id !== robotId) {
+    return <main className="min-h-screen" />;
+  }
+
+  return <RobotChat key={robotId} robotId={robotId} initial={loaded.messages} />;
+}
+
+function RobotChat({ robotId, initial }: { robotId: string; initial: UIMessage[] }) {
   const { robots } = useRobots();
   const { setStatus } = useStatuses();
   const memory = useMemory(robotId);
   const robot = robots.find((r) => r.id === robotId);
-  const [initial, setInitial] = useState<UIMessage[] | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [input, setInput] = useState("");
   const loggedParts = useRef<Set<string>>(new Set());
 
-  useEffect(() => {
-    setInitial(loadMessages(robotId));
-  }, [robotId]);
+  // Latest robot/roster are read through a ref so the transport identity stays
+  // stable — recreating it on every render re-initialises useChat endlessly.
+  const contextRef = useRef({ robot, robots });
+  contextRef.current = { robot, robots };
 
   const transport = useMemo(
     () =>
@@ -81,13 +98,13 @@ function RobotChannel() {
         prepareSendMessagesRequest: ({ messages }) => ({
           body: {
             messages,
-            robot,
-            roster: robots,
+            robot: contextRef.current.robot,
+            roster: contextRef.current.robots,
             memory: loadMemory(robotId),
           },
         }),
       }),
-    [robot, robots, robotId],
+    [robotId],
   );
 
   const { messages, sendMessage, status, stop, error } = useChat({
