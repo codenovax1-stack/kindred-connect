@@ -135,7 +135,7 @@ export const Route = createFileRoute("/api/chat")({
           const result = streamText({
             model: makeModel(),
             system: systemPrompt(body.robot, body.memory ?? [], roster),
-            messages: convertToModelMessages(body.messages),
+            messages: await convertToModelMessages(body.messages),
             tools: buildTools(body.robot, roster, makeModel),
             stopWhen: stepCountIs(50),
             providerOptions: RESPONSES_PROVIDER_OPTIONS,
