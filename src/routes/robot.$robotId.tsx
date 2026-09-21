@@ -2,7 +2,7 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Brain, Eraser, Globe, Search, Share2 } from "lucide-react";
+import { ArrowLeft, Eraser } from "lucide-react";
 import {
   Conversation,
   ConversationContent,
@@ -58,13 +58,6 @@ export const Route = createFileRoute("/robot/$robotId")({
   }),
   component: RobotChannel,
 });
-
-const TOOL_ICON: Record<string, React.ReactNode> = {
-  web_search: <Search className="h-4 w-4" />,
-  read_page: <Globe className="h-4 w-4" />,
-  save_memory: <Brain className="h-4 w-4" />,
-  delegate_to_robot: <Share2 className="h-4 w-4" />,
-};
 
 function RobotChannel() {
   const { robotId } = useParams({ from: "/robot/$robotId" });
@@ -272,7 +265,6 @@ function RobotChannel() {
                           type={tp.type}
                           state={tp.state}
                           title={name.replace(/_/g, " ")}
-                          icon={TOOL_ICON[name]}
                         />
                         <ToolContent>
                           <ToolInput input={tp.input} />
@@ -287,7 +279,7 @@ function RobotChannel() {
             </Message>
           ))}
           {(status === "submitted" || status === "streaming") && (
-            <Shimmer className="text-sm">{robot.name} is working...</Shimmer>
+            <Shimmer className="text-sm">{`${robot.name} is working...`}</Shimmer>
           )}
           {error && (
             <p className="text-sm text-destructive">
