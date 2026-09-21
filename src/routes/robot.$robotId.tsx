@@ -68,6 +68,7 @@ function RobotChannel() {
   const [initial, setInitial] = useState<UIMessage[] | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [input, setInput] = useState("");
+  const loggedParts = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     setInitial(loadMessages(robotId));
