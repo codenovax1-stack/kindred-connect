@@ -1,5 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { convertToModelMessages, streamText, stepCountIs, tool, type UIMessage } from "ai";
+import {
+  convertToModelMessages,
+  streamText,
+  stepCountIs,
+  tool,
+  type ToolSet,
+  type UIMessage,
+} from "ai";
 import { z } from "zod";
 import {
   CHAT_MODEL,
@@ -47,7 +54,7 @@ function buildTools(
   roster: RobotPayload[],
   makeModel: () => ReturnType<ReturnType<typeof createGateway>["responses"]>,
 ) {
-  const tools: Record<string, ReturnType<typeof tool>> = {};
+  const tools: ToolSet = {};
 
   if (robot.capabilities?.web !== false) {
     tools["web_search"] = tool({
