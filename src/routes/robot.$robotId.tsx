@@ -74,6 +74,11 @@ function RobotChannel() {
     setInitial(loadMessages(robotId));
   }, [robotId]);
 
+  // Latest robot/roster are read through a ref so the transport identity stays
+  // stable — recreating it on every render re-initialises useChat endlessly.
+  const contextRef = useRef({ robot, robots });
+  contextRef.current = { robot, robots };
+
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
@@ -81,13 +86,13 @@ function RobotChannel() {
         prepareSendMessagesRequest: ({ messages }) => ({
           body: {
             messages,
-            robot,
-            roster: robots,
+            robot: contextRef.current.robot,
+            roster: contextRef.current.robots,
             memory: loadMemory(robotId),
           },
         }),
       }),
-    [robot, robots, robotId],
+    [robotId],
   );
 
   const { messages, sendMessage, status, stop, error } = useChat({
