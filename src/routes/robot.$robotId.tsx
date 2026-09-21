@@ -262,7 +262,7 @@ function RobotChannel() {
                     return (
                       <Tool key={index} defaultOpen={false}>
                         <ToolHeader
-                          type={tp.type}
+                          type={part.type as `tool-${string}`}
                           state={tp.state}
                           title={name.replace(/_/g, " ")}
                         />
