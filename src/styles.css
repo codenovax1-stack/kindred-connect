@@ -142,3 +142,83 @@
     color: var(--color-foreground);
   }
 }
+
+/* ===== AI Robot Command Center — futuristic dark command deck ===== */
+@theme inline {
+  --font-display: "Orbitron", system-ui, sans-serif;
+  --font-body: "Rajdhani", system-ui, sans-serif;
+  --color-grid: var(--grid);
+  --color-neon: var(--neon);
+  --color-neon-foreground: var(--neon-foreground);
+}
+
+.dark {
+  --radius: 0.5rem;
+  --background: oklch(0.16 0.03 250);
+  --foreground: oklch(0.94 0.02 220);
+  --card: oklch(0.21 0.035 252);
+  --card-foreground: oklch(0.94 0.02 220);
+  --popover: oklch(0.19 0.035 252);
+  --popover-foreground: oklch(0.94 0.02 220);
+  --primary: oklch(0.82 0.16 195);
+  --primary-foreground: oklch(0.17 0.04 250);
+  --secondary: oklch(0.27 0.04 255);
+  --secondary-foreground: oklch(0.93 0.02 220);
+  --muted: oklch(0.25 0.035 255);
+  --muted-foreground: oklch(0.72 0.03 230);
+  --accent: oklch(0.3 0.07 300);
+  --accent-foreground: oklch(0.96 0.02 220);
+  --destructive: oklch(0.63 0.21 25);
+  --destructive-foreground: oklch(0.97 0.01 220);
+  --border: oklch(0.34 0.05 250 / 60%);
+  --input: oklch(0.34 0.05 250 / 70%);
+  --ring: oklch(0.82 0.16 195);
+  --neon: oklch(0.85 0.17 190);
+  --neon-foreground: oklch(0.16 0.03 250);
+  --grid: oklch(0.3 0.05 250 / 45%);
+  --sidebar: oklch(0.18 0.03 252);
+  --sidebar-foreground: oklch(0.93 0.02 220);
+  --sidebar-primary: oklch(0.82 0.16 195);
+  --sidebar-primary-foreground: oklch(0.16 0.03 250);
+  --sidebar-accent: oklch(0.27 0.04 255);
+  --sidebar-accent-foreground: oklch(0.94 0.02 220);
+  --sidebar-border: oklch(0.34 0.05 250 / 60%);
+  --sidebar-ring: oklch(0.82 0.16 195);
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: 1.02rem;
+  background-image:
+    radial-gradient(900px 500px at 12% -10%, oklch(0.35 0.1 200 / 28%), transparent 70%),
+    radial-gradient(700px 420px at 95% 0%, oklch(0.32 0.12 300 / 24%), transparent 70%),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: auto, auto, 48px 48px, 48px 48px;
+  background-attachment: fixed;
+}
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+}
+
+@utility panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklab, var(--color-card) 82%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+@utility neon-text {
+  color: var(--color-neon);
+  text-shadow: 0 0 18px color-mix(in oklab, var(--color-neon) 55%, transparent);
+}
+
+@utility scanline {
+  background-image: repeating-linear-gradient(
+    180deg,
+    transparent 0 3px,
+    oklch(1 0 0 / 3%) 3px 4px
+  );
+}
