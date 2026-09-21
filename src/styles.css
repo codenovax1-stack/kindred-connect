@@ -194,11 +194,18 @@ body {
     radial-gradient(700px 420px at 95% 0%, oklch(0.32 0.12 300 / 24%), transparent 70%),
     linear-gradient(var(--grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: auto, auto, 48px 48px, 48px 48px;
+  background-size:
+    auto,
+    auto,
+    48px 48px,
+    48px 48px;
   background-attachment: fixed;
 }
 
-h1, h2, h3, .font-display {
+h1,
+h2,
+h3,
+.font-display {
   font-family: var(--font-display);
   letter-spacing: 0.06em;
 }
@@ -216,9 +223,5 @@ h1, h2, h3, .font-display {
 }
 
 @utility scanline {
-  background-image: repeating-linear-gradient(
-    180deg,
-    transparent 0 3px,
-    oklch(1 0 0 / 3%) 3px 4px
-  );
+  background-image: repeating-linear-gradient(180deg, transparent 0 3px, oklch(1 0 0 / 3%) 3px 4px);
 }

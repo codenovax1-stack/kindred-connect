@@ -68,7 +68,9 @@ function RobotCard({
   return (
     <div
       className="panel scanline group relative overflow-hidden p-4 transition-transform hover:-translate-y-1"
-      style={{ boxShadow: `inset 0 1px 0 oklch(1 0 0 / 8%), 0 0 0 1px hsl(${robot.accent} / 0.18)` }}
+      style={{
+        boxShadow: `inset 0 1px 0 oklch(1 0 0 / 8%), 0 0 0 1px hsl(${robot.accent} / 0.18)`,
+      }}
     >
       <div
         className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full opacity-35 blur-2xl transition-opacity group-hover:opacity-60"
@@ -78,7 +80,10 @@ function RobotCard({
         <div className="flex items-start gap-3">
           <div
             className="flex h-12 w-12 items-center justify-center rounded-md border text-2xl"
-            style={{ borderColor: `hsl(${robot.accent} / 0.5)`, background: `hsl(${robot.accent} / 0.1)` }}
+            style={{
+              borderColor: `hsl(${robot.accent} / 0.5)`,
+              background: `hsl(${robot.accent} / 0.1)`,
+            }}
           >
             {robot.avatar}
           </div>

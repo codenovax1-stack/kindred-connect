@@ -95,7 +95,11 @@ function buildTools(
           model: makeModel(),
           system: `${systemPrompt(worker, [], roster)}\n\nYou were delegated this task by ${robot.name}. Answer thoroughly and cite URLs.`,
           prompt: task,
-          tools: buildTools({ ...worker, capabilities: { ...worker.capabilities, delegate: false } }, roster, makeModel),
+          tools: buildTools(
+            { ...worker, capabilities: { ...worker.capabilities, delegate: false } },
+            roster,
+            makeModel,
+          ),
           stopWhen: stepCountIs(20),
           providerOptions: RESPONSES_PROVIDER_OPTIONS,
         });

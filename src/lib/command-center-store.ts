@@ -74,22 +74,21 @@ export function loadRobots(): Robot[] {
   const stored = read<Robot[] | null>(ROBOTS_KEY, null);
   if (!stored || stored.length === 0) return DEFAULT_ROBOTS;
   const missingBuiltins = DEFAULT_ROBOTS.filter((d) => !stored.some((s) => s.id === d.id));
-  return [...DEFAULT_ROBOTS.filter((d) => stored.some((s) => s.id === d.id)).map((d) => {
-    const override = stored.find((s) => s.id === d.id)!;
-    return { ...d, ...override, builtin: true };
-  }), ...missingBuiltins, ...stored.filter((s) => !s.builtin)].sort(
-    (a, b) => (a.builtin === b.builtin ? a.createdAt - b.createdAt : a.builtin ? -1 : 1),
-  );
+  return [
+    ...DEFAULT_ROBOTS.filter((d) => stored.some((s) => s.id === d.id)).map((d) => {
+      const override = stored.find((s) => s.id === d.id)!;
+      return { ...d, ...override, builtin: true };
+    }),
+    ...missingBuiltins,
+    ...stored.filter((s) => !s.builtin),
+  ].sort((a, b) => (a.builtin === b.builtin ? a.createdAt - b.createdAt : a.builtin ? -1 : 1));
 }
 
 export function useRobots() {
   const { value, update, hydrated } = useStoredValue<Robot[]>(ROBOTS_KEY, DEFAULT_ROBOTS);
   const robots = hydrated ? loadRobots() : DEFAULT_ROBOTS;
 
-  const addRobot = useCallback(
-    (robot: Robot) => update([...loadRobots(), robot]),
-    [update],
-  );
+  const addRobot = useCallback((robot: Robot) => update([...loadRobots(), robot]), [update]);
   const removeRobot = useCallback(
     (id: string) => {
       update(loadRobots().filter((r) => r.id !== id));
@@ -121,10 +120,7 @@ export function useStatuses() {
 
 export function logActivity(entry: Omit<ActivityEntry, "id" | "at">) {
   const list = read<ActivityEntry[]>(ACTIVITY_KEY, []);
-  const next = [
-    { ...entry, id: crypto.randomUUID(), at: Date.now() },
-    ...list,
-  ].slice(0, 120);
+  const next = [{ ...entry, id: crypto.randomUUID(), at: Date.now() }, ...list].slice(0, 120);
   write(ACTIVITY_KEY, next);
 }
 
