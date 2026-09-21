@@ -122,10 +122,15 @@ function RobotChannel() {
     if (!initial) return;
     saveMessages(robotId, messages);
     for (const message of messages) {
+      let index = -1;
       for (const part of message.parts) {
+        index += 1;
         if (!part.type.startsWith("tool-")) continue;
         const tp = part as ToolPart;
         if (tp.state !== "output-available" || !tp.output) continue;
+        const key = `${message.id}:${index}`;
+        if (loggedParts.current.has(key)) continue;
+        loggedParts.current.add(key);
         const out = tp.output as Record<string, unknown>;
         if (part.type === "tool-save_memory" && typeof out["note"] === "string") {
           saveMemoryNote(robotId, out["note"]);
