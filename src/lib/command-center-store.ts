@@ -92,7 +92,13 @@ export function loadRobots(): Robot[] {
 
 export function useRobots() {
   const { value, update, hydrated } = useStoredValue<Robot[]>(ROBOTS_KEY, DEFAULT_ROBOTS);
-  const robots = hydrated ? loadRobots() : DEFAULT_ROBOTS;
+  // Derive once per stored-value change; a fresh array on every render would
+  // invalidate memos/effects downstream and can trigger update loops.
+  const robots = useMemo(
+    () => (hydrated ? loadRobots() : DEFAULT_ROBOTS),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [hydrated, value],
+  );
 
   const addRobot = useCallback((robot: Robot) => update([...loadRobots(), robot]), [update]);
   const removeRobot = useCallback(
