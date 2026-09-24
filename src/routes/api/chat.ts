@@ -9,12 +9,12 @@ import {
 } from "ai";
 import { z } from "zod";
 import {
-  CHAT_MODEL,
-  RESPONSES_PROVIDER_OPTIONS,
-  createGateway,
-  createLovableAiGatewayRunIdFetch,
-  getLovableAiGatewayRunId,
-} from "@/lib/ai-gateway.server";
+  RUNTIME_NOT_CONNECTED,
+  createRobotModel,
+  readRuntimeConfig,
+  type RuntimeConfig,
+} from "@/lib/robot-runtime.server";
+import { buildProjectTools, defaultRepo, githubAvailable } from "@/lib/github-tools.server";
 import { readPage, webSearch } from "@/lib/web-tools.server";
 import { SHARED_FOUNDATION } from "@/lib/robots";
 
@@ -43,17 +43,21 @@ function systemPrompt(robot: RobotPayload, memory: string[], roster: RobotPayloa
     robot.capabilities?.delegate
       ? "You can delegate sub-tasks with delegate_to_robot. Delegate in parallel where sensible, then merge results and attribute each finding to the robot that produced it."
       : "",
+    githubAvailable()
+      ? [
+          "# Project and code access",
+          `You have real tools over the operator's GitHub repositories${defaultRepo() ? ` (default repository: ${defaultRepo()})` : ""}: list_repos, list_files, search_code, read_file, git_status, git_diff, check_status, propose_change, commit_change, delete_file, open_pull_request.`,
+          "Never claim you changed code unless a tool returned a commit. Workflow for any change: read the relevant files, then propose_change to show a diff, then wait for the operator to approve commit_change. delete_file, commit_change and open_pull_request pause for the operator's approval before running — that is expected, do not work around it.",
+          "check_status only reports automated check runs that already exist in the repository; it does not run a build locally.",
+        ].join("\n")
+      : "Project/code tools are unavailable because no GitHub connection is configured.",
     "The local desktop agent bridge (Gmail accounts, files, computer actions) is not connected yet. If a request needs it, say so clearly instead of fabricating results.",
   ]
     .filter(Boolean)
     .join("\n\n");
 }
 
-function buildTools(
-  robot: RobotPayload,
-  roster: RobotPayload[],
-  makeModel: () => ReturnType<ReturnType<typeof createGateway>["responses"]>,
-) {
+function buildTools(robot: RobotPayload, roster: RobotPayload[], cfg: RuntimeConfig): ToolSet {
   const tools: ToolSet = {};
 
   if (robot.capabilities?.web !== false) {
@@ -78,6 +82,8 @@ function buildTools(
     });
   }
 
+  Object.assign(tools, buildProjectTools());
+
   if (robot.capabilities?.delegate) {
     const names = roster.filter((r) => r.id !== robot.id).map((r) => r.name);
     tools["delegate_to_robot"] = tool({
@@ -91,19 +97,30 @@ function buildTools(
           (r) => r.name.toLowerCase() === target.trim().toLowerCase() && r.id !== robot.id,
         );
         if (!worker) return { robot: target, error: `No robot named ${target} exists.` };
-        const result = streamText({
-          model: makeModel(),
-          system: `${systemPrompt(worker, [], roster)}\n\nYou were delegated this task by ${robot.name}. Answer thoroughly and cite URLs.`,
-          prompt: task,
-          tools: buildTools(
-            { ...worker, capabilities: { ...worker.capabilities, delegate: false } },
-            roster,
-            makeModel,
-          ),
-          stopWhen: stepCountIs(20),
-          providerOptions: RESPONSES_PROVIDER_OPTIONS,
-        });
-        return { robot: worker.name, task, result: await result.text };
+        // Delegates run on the same external runtime. Read-only tools only:
+        // anything needing approval stays with the robot the operator is
+        // talking to, so approval is never bypassed inside a delegation.
+        const workerTools = buildTools(
+          { ...worker, capabilities: { ...worker.capabilities, delegate: false } },
+          roster,
+          cfg,
+        );
+        for (const key of ["commit_change", "delete_file", "open_pull_request"]) {
+          delete workerTools[key];
+        }
+        try {
+          const result = streamText({
+            model: createRobotModel(cfg),
+            system: `${systemPrompt(worker, [], roster)}\n\nYou were delegated this task by ${robot.name}. Answer thoroughly and cite URLs or file paths.`,
+            prompt: task,
+            tools: workerTools,
+            stopWhen: stepCountIs(20),
+          });
+          return { robot: worker.name, task, result: await result.text };
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          return { robot: worker.name, task, error: message };
+        }
       },
     });
   }
@@ -115,9 +132,11 @@ export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = process.env["LOVABLE_API_KEY"];
-        if (!apiKey) {
-          return Response.json({ error: "AI is not configured for this app." }, { status: 500 });
+        // The robots run ONLY on the operator's own AI runtime. There is no
+        // Lovable AI call and no fallback to it anywhere in this path.
+        const cfg = readRuntimeConfig();
+        if (!cfg.configured) {
+          return Response.json({ error: RUNTIME_NOT_CONNECTED }, { status: 503 });
         }
 
         const body = (await request.json()) as {
@@ -130,24 +149,26 @@ export const Route = createFileRoute("/api/chat")({
           return Response.json({ error: "Invalid request." }, { status: 400 });
         }
 
-        const runIdFetch = createLovableAiGatewayRunIdFetch(getLovableAiGatewayRunId(request));
-        const gateway = createGateway(apiKey, runIdFetch);
-        const makeModel = () => gateway.responses(CHAT_MODEL);
         const roster = body.roster ?? [];
 
         try {
           const result = streamText({
-            model: makeModel(),
+            model: createRobotModel(cfg),
             system: systemPrompt(body.robot, body.memory ?? [], roster),
             messages: await convertToModelMessages(body.messages),
-            tools: buildTools(body.robot, roster, makeModel),
+            tools: buildTools(body.robot, roster, cfg),
             stopWhen: stepCountIs(50),
-            providerOptions: RESPONSES_PROVIDER_OPTIONS,
             abortSignal: request.signal,
           });
           return result.toUIMessageStreamResponse({
             originalMessages: body.messages,
             sendReasoning: true,
+            // Never mask the real failure behind "An error occurred."
+            onError: (error) => {
+              const message = error instanceof Error ? error.message : String(error);
+              console.error("robot runtime stream failed", error);
+              return `${cfg.provider} (${cfg.models[0]}) failed: ${message}`;
+            },
           });
         } catch (error) {
           if (error instanceof Error && error.name === "AbortError") {
