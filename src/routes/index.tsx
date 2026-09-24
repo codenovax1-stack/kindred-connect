@@ -190,6 +190,7 @@ function CommandCenter() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <RuntimeBadge />
           <AddRobotDialog onCreate={addRobot} />
           <Button variant="destructive" className="font-display tracking-widest" onClick={stopAll}>
             <Zap className="mr-1 h-4 w-4" /> STOP ALL

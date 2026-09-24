@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiRuntimeStatusRouteImport } from './routes/api/runtime-status'
 import { Route as RobotRobotIdRouteImport } from './routes/robot.$robotId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -23,6 +24,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRuntimeStatusRoute = ApiRuntimeStatusRouteImport.update({
+  id: '/api/runtime-status',
+  path: '/api/runtime-status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RobotRobotIdRoute = RobotRobotIdRouteImport.update({
   id: '/robot/$robotId',
   path: '/robot/$robotId',
@@ -32,30 +38,34 @@ const RobotRobotIdRoute = RobotRobotIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/runtime-status': typeof ApiRuntimeStatusRoute
   '/robot/$robotId': typeof RobotRobotIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/runtime-status': typeof ApiRuntimeStatusRoute
   '/robot/$robotId': typeof RobotRobotIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/runtime-status': typeof ApiRuntimeStatusRoute
   '/robot/$robotId': typeof RobotRobotIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/chat' | '/robot/$robotId'
+  fullPaths: '/' | '/api/chat' | '/api/runtime-status' | '/robot/$robotId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/chat' | '/robot/$robotId'
-  id: '__root__' | '/' | '/api/chat' | '/robot/$robotId'
+  to: '/' | '/api/chat' | '/api/runtime-status' | '/robot/$robotId'
+  id: '__root__' | '/' | '/api/chat' | '/api/runtime-status' | '/robot/$robotId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiRuntimeStatusRoute: typeof ApiRuntimeStatusRoute
   RobotRobotIdRoute: typeof RobotRobotIdRoute
 }
 
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/runtime-status': {
+      id: '/api/runtime-status'
+      path: '/api/runtime-status'
+      fullPath: '/api/runtime-status'
+      preLoaderRoute: typeof ApiRuntimeStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/robot/$robotId': {
       id: '/robot/$robotId'
       path: '/robot/$robotId'
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiRuntimeStatusRoute: ApiRuntimeStatusRoute,
   RobotRobotIdRoute: RobotRobotIdRoute,
 }
 export const routeTree = rootRouteImport
